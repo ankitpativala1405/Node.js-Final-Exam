@@ -1,0 +1,79 @@
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-brand">
+            <a href="/articles" class="brand-link">
+                <i class="fas fa-blog"></i>
+                <span>BlogHub</span>
+            </a>
+        </div>
+        
+        <div class="navbar-menu" id="navbarMenu">
+            <div class="navbar-nav">
+                <a href="/articles" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>All Articles</span>
+                </a>
+                
+                <% if (user) { %>
+                    <a href="/articles/my-articles" class="nav-link">
+                        <i class="fas fa-user-edit"></i>
+                        <span>My Articles</span>
+                    </a>
+                    
+                    <a href="/articles/create/new" class="nav-link">
+                        <i class="fas fa-plus"></i>
+                        <span>Write Article</span>
+                    </a>
+                <% } %>
+            </div>
+            
+            <div class="navbar-auth">
+                <% if (user) { %>
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <i class="fas fa-user-circle"></i>
+                            <span class="username"><%= user.username %></span>
+                            <% if (user.role === 'admin') { %>
+                                <span class="role-badge">Admin</span>
+                            <% } %>
+                        </div>
+                        <div class="user-dropdown">
+                            <a href="/articles/my-articles" class="dropdown-item">
+                                <i class="fas fa-user-edit"></i>
+                                My Articles
+                            </a>
+                            <a href="/articles/create/new" class="dropdown-item">
+                                <i class="fas fa-plus"></i>
+                                Write Article
+                            </a>
+                            <hr class="dropdown-divider">
+                            <form action="/auth/logout" method="POST" class="logout-form">
+                                <button type="submit" class="dropdown-item logout-btn">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Sign Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <div class="auth-links">
+                        <a href="/auth/login" class="btn btn-outline">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Sign In
+                        </a>
+                        <a href="/auth/register" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i>
+                            Sign Up
+                        </a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+        
+        <button class="navbar-toggle" id="navbarToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+</nav>

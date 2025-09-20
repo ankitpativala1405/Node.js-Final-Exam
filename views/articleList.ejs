@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Blog Project' %></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('navbar') %>
+    
+    <main class="main-content">
+        <div class="container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-newspaper"></i>
+            All Articles
+        </h1>
+        <p class="page-subtitle">Discover amazing stories and insights from our community</p>
+    </div>
+
+    <% if (articles && articles.length > 0) { %>
+        <div class="articles-grid">
+            <% articles.forEach(article => { %>
+                <article class="article-card">
+                    <div class="article-header">
+                        <h2 class="article-title">
+                            <a href="/articles/<%= article._id %>"><%= article.title %></a>
+                        </h2>
+                        <div class="article-meta">
+                            <div class="author-info">
+                                <i class="fas fa-user"></i>
+                                <span><%= article.authorName %></span>
+                            </div>
+                            <div class="article-date">
+                                <i class="fas fa-calendar"></i>
+                                <span><%= new Date(article.createdAt).toLocaleDateString() %></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="article-content">
+                        <p><%= article.content.substring(0, 200) %>...</p>
+                    </div>
+                    
+                    <% if (article.tags && article.tags.length > 0) { %>
+                        <div class="article-tags">
+                            <% article.tags.forEach(tag => { %>
+                                <span class="tag"><%= tag %></span>
+                            <% }) %>
+                        </div>
+                    <% } %>
+                    
+                    <div class="article-footer">
+                        <div class="article-stats">
+                            <span class="comment-count">
+                                <i class="fas fa-comments"></i>
+                                <%= article.comments ? article.comments.length : 0 %> comments
+                            </span>
+                        </div>
+                        <a href="/articles/<%= article._id %>" class="read-more">
+                            Read More <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+            <% }) %>
+        </div>
+
+        <% if (totalPages > 1) { %>
+            <div class="pagination">
+                <% if (currentPage > 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>" class="pagination-btn">
+                        <i class="fas fa-chevron-left"></i>
+                        Previous
+                    </a>
+                <% } %>
+                
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                    <% if (i === currentPage) { %>
+                        <span class="pagination-btn active"><%= i %></span>
+                    <% } else { %>
+                        <a href="?page=<%= i %>" class="pagination-btn"><%= i %></a>
+                    <% } %>
+                <% } %>
+                
+                <% if (currentPage < totalPages) { %>
+                    <a href="?page=<%= currentPage + 1 %>" class="pagination-btn">
+                        Next
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                <% } %>
+            </div>
+        <% } %>
+    <% } else { %>
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-newspaper"></i>
+            </div>
+            <h3>No Articles Yet</h3>
+            <p>Be the first to share your thoughts with the community!</p>
+            <% if (user) { %>
+                <a href="/articles/create/new" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Write Your First Article
+                </a>
+            <% } else { %>
+                <a href="/auth/register" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Join Our Community
+                </a>
+            <% } %>
+        </div>
+    <% } %>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Blog Project. Built with Node.js, Express, and MongoDB.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

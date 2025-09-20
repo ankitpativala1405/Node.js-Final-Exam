@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Blog Project' %></title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('navbar') %>
+    
+    <main class="main-content">
+        <div class="container">
+    <article class="article-detail">
+        <div class="article-header">
+            <h1 class="article-title"><%= article.title %></h1>
+            <div class="article-meta">
+                <div class="author-info">
+                    <i class="fas fa-user"></i>
+                    <span>By <%= article.authorName %></span>
+                </div>
+                <div class="article-date">
+                    <i class="fas fa-calendar"></i>
+                    <span><%= new Date(article.createdAt).toLocaleDateString() %></span>
+                </div>
+                <% if (article.updatedAt && article.updatedAt.getTime() !== article.createdAt.getTime()) { %>
+                    <div class="article-date">
+                        <i class="fas fa-edit"></i>
+                        <span>Updated: <%= new Date(article.updatedAt).toLocaleDateString() %></span>
+                    </div>
+                <% } %>
+            </div>
+            
+            <% if (user && (user._id.toString() === article.author._id.toString() || user.role === 'admin')) { %>
+                <div class="article-actions">
+                    <a href="/articles/edit/<%= article._id %>" class="btn btn-outline">
+                        <i class="fas fa-edit"></i>
+                        Edit Article
+                    </a>
+                    <form action="/articles/delete/<%= article._id %>" method="POST" class="delete-form">
+                        <button type="submit" class="btn btn-danger" 
+                                onclick="return confirm('Are you sure you want to delete this article?')">
+                            <i class="fas fa-trash"></i>
+                            Delete Article
+                        </button>
+                    </form>
+                </div>
+            <% } %>
+        </div>
+        
+        <% if (article.tags && article.tags.length > 0) { %>
+            <div class="article-tags">
+                <% article.tags.forEach(tag => { %>
+                    <span class="tag"><%= tag %></span>
+                <% }) %>
+            </div>
+        <% } %>
+        
+        <div class="article-content">
+            <%= article.content.replace(/\n/g, '<br>') %>
+        </div>
+    </article>
+
+    <div class="comments-section">
+        <h3 class="comments-title">
+            <i class="fas fa-comments"></i>
+            Comments (<%= article.comments ? article.comments.length : 0 %>)
+        </h3>
+        
+        <% if (user) { %>
+            <div class="comment-form">
+                <form id="commentForm">
+                    <div class="form-group">
+                        <textarea name="content" id="commentContent" placeholder="Write your comment..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Post Comment
+                    </button>
+                </form>
+            </div>
+        <% } else { %>
+            <div class="login-prompt">
+                <p>Please <a href="/auth/login">sign in</a> to leave a comment.</p>
+            </div>
+        <% } %>
+        
+        <div class="comments-list" id="commentsList">
+            <% if (article.comments && article.comments.length > 0) { %>
+                <% article.comments.forEach(comment => { %>
+                    <div class="comment" data-comment-id="<%= comment._id %>">
+                        <div class="comment-header">
+                            <div class="comment-author">
+                                <i class="fas fa-user-circle"></i>
+                                <span><%= comment.authorName %></span>
+                            </div>
+                            <div class="comment-date">
+                                <%= new Date(comment.createdAt).toLocaleDateString() %>
+                            </div>
+                        </div>
+                        <div class="comment-content">
+                            <%= comment.content %>
+                        </div>
+                        <% if (user && (user._id.toString() === comment.author.toString() || user.role === 'admin')) { %>
+                            <div class="comment-actions">
+                                <button class="btn btn-sm btn-danger delete-comment" 
+                                        data-comment-id="<%= comment._id %>">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        <% } %>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="no-comments">
+                    <p>No comments yet. Be the first to comment!</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const commentForm = document.getElementById('commentForm');
+    const commentsList = document.getElementById('commentsList');
+    
+    if (commentForm) {
+        commentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const content = document.getElementById('commentContent').value.trim();
+            if (!content) return;
+            
+            try {
+                const response = await fetch('/comments/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        articleId: '<%= article._id %>',
+                        content: content
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Add comment to the list
+                    const commentHtml = \`
+                        <div class="comment" data-comment-id="\${result.comment._id}">
+                            <div class="comment-header">
+                                <div class="comment-author">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>\${result.comment.authorName}</span>
+                                </div>
+                                <div class="comment-date">
+                                    \${new Date(result.comment.createdAt).toLocaleDateString()}
+                                </div>
+                            </div>
+                            <div class="comment-content">
+                                \${result.comment.content}
+                            </div>
+                            <div class="comment-actions">
+                                <button class="btn btn-sm btn-danger delete-comment" 
+                                        data-comment-id="\${result.comment._id}">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    \`;
+                    
+                    const noComments = commentsList.querySelector('.no-comments');
+                    if (noComments) {
+                        noComments.remove();
+                    }
+                    
+                    commentsList.insertAdjacentHTML('beforeend', commentHtml);
+                    document.getElementById('commentContent').value = '';
+                    
+                    // Update comment count
+                    const commentsTitle = document.querySelector('.comments-title');
+                    const currentCount = parseInt(commentsTitle.textContent.match(/\d+/)[0]);
+                    commentsTitle.innerHTML = \`<i class="fas fa-comments"></i> Comments (\${currentCount + 1})\`;
+                } else {
+                    alert('Failed to post comment: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error posting comment:', error);
+                alert('Failed to post comment. Please try again.');
+            }
+        });
+    }
+    
+    // Handle comment deletion
+    commentsList.addEventListener('click', async function(e) {
+        if (e.target.closest('.delete-comment')) {
+            const commentId = e.target.closest('.delete-comment').dataset.commentId;
+            
+            if (!confirm('Are you sure you want to delete this comment?')) return;
+            
+            try {
+                const response = await fetch(\`/comments/delete/\${commentId}\`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const commentElement = document.querySelector(\`[data-comment-id="\${commentId}"]\`);
+                    commentElement.remove();
+                    
+                    // Update comment count
+                    const commentsTitle = document.querySelector('.comments-title');
+                    const currentCount = parseInt(commentsTitle.textContent.match(/\d+/)[0]);
+                    commentsTitle.innerHTML = \`<i class="fas fa-comments"></i> Comments (\${currentCount - 1})\`;
+                    
+                    // Show no comments message if no comments left
+                    if (commentsList.children.length === 0) {
+                        commentsList.innerHTML = '<div class="no-comments"><p>No comments yet. Be the first to comment!</p></div>';
+                    }
+                } else {
+                    alert('Failed to delete comment: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error deleting comment:', error);
+                alert('Failed to delete comment. Please try again.');
+            }
+        }
+    });
+});
+</script>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Blog Project. Built with Node.js, Express, and MongoDB.</p>
+        </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>
